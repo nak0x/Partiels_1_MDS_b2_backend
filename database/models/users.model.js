@@ -16,7 +16,8 @@ const UserSchema = new Schema({
             },
             message: props => `${props.value} is not a valid email adress`
         },
-        require: [true, "An email is required for creating a new User"]
+        require: [true, "An email is required for creating a new User"],
+        unique: [true, "User must be unique"]
     },
     message : {
         type: String,

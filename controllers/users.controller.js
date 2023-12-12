@@ -19,7 +19,7 @@ exports.createNewUser = async (req, res) =>{
         // Data validation
         const validationResult = UserValidator.validate(data);
         if(validationResult.error){
-            res.status(400).json({
+            return res.status(400).json({
                 ok: false,
                 error: `Connot create a user.`,
                 details: validationResult.error,
@@ -29,6 +29,16 @@ exports.createNewUser = async (req, res) =>{
 
         // Replace data with filterd validated data
         data = validationResult.value;
+
+        // Check if user already exist
+        if(await isExistingUser(data) == true){
+            return res.status(400).json({
+                ok: false,
+                message: `User already exist`,
+                details: `Cannot create a user that already exist`,
+                type: `RESSOURCE_ALREADY_EXIST`
+            })
+        }
     
         // Instantiation of UsersModel to create new user
         const newUser = new UsersModel();
@@ -41,14 +51,27 @@ exports.createNewUser = async (req, res) =>{
         // User saving 
         await newUser.save();
 
+        return res.status(201).json({
+            ok: true,
+            message: `User ${newUser._id} have been created`
+        })
+
     }catch(err){
-        res.status(500).json({
+        return res.status(500).json({
             ok: false,
             error: `An error occured while creating a new user`,
             details: err,
             type: "UNKNOWED_ERROR"
         })
     }
+
+    // Exeptions management
+    return res.status(500).json({
+        ok: false,
+        error: `An error occured during the processing of the request`,
+        details: null,
+        type: "INTERNAL_SERVER_ERROR"
+    })
 }
 
 /**
@@ -57,16 +80,101 @@ exports.createNewUser = async (req, res) =>{
  * @param {Express.Response} res The http response
  */
 exports.createOrModifyUser = async (req, res) => {
+    // May have a user id in the req.params. See "../router/users.routes.js:8:21"
+    const userId = req.params.id;
     
-}
+    // Errors handler
+    try{
 
-/**
- * Send via a JSON Res all the users in the DB
- * @param {Express.Request} req The http request received
- * @param {Express.Response} res The http res sended
- */
-exports.getAllUsers = async (req, res) => {
+        // Deconstruct of the request body
+        let data = {
+            name: req.body.name,
+            email: req.body.email,
+            message: req.body.message
+        };
+    
+        // Data validation
+        const validationResult = UserValidator.validate(data);
+        if(validationResult.error){
+            return res.status(400).json({
+                ok: false,
+                error: `Connot create a user.`,
+                details: validationResult.error,
+                type: "JOI_DATA_VALIDATION"
+            });
+        }
 
+        // Replace data with filterd validated data
+        data = validationResult.value;
+
+        if(userId){
+    
+            // Finding the user
+            const user = await UsersModel.findById(userId);
+    
+            // If a user really exist
+            if(user){
+
+                // Full update of the user
+                await UsersModel.findByIdAndUpdate(userId, {
+                    $set:{
+                        name: data.name,
+                        email: data.email,
+                        message: data.message
+                    }
+                })
+
+                // Send 201 - Response
+                return res.status(201).json({
+                    ok: true,
+                    message: `New user ${userId} have being updated !`
+                })
+            }
+        }else{
+
+            // Check if user already exist
+            if(await isExistingUser(data) == true){
+                return res.status(400).json({
+                    ok: false,
+                    message: `User already exist`,
+                    details: `Cannot create a user that already exist`,
+                    type: `RESSOURCE_ALREADY_EXIST`
+                })
+            }
+            
+            // Create a new user
+            const newUser = new UsersModel();
+
+            // User data fill
+            newUser.name = data.name;
+            newUser.email = data.email;
+            newUser.message = data.message;
+
+            // Send the new user to the db
+            await newUser.save();
+
+            // Send 201 - response
+            return res.status(201).json({
+                ok: true,
+                message: `New user ${newUser._id} have being created !`
+            })
+        }
+    }catch(err){
+        return res.status(500).json({
+            ok: false,
+            error: `An error occured while creating of modifying the user`,
+            details: err,
+            type: "INTERAL_SERVER_ERROR"
+        })
+    }
+
+
+    return res.status(500).json({
+        ok: false,
+        error: `An error occured during the processing of the request`,
+        details: null,
+        type: "INTERNAL_SERVER_ERROR"
+    })
 }
 
 /**
@@ -75,16 +183,50 @@ exports.getAllUsers = async (req, res) => {
  * @param {Express.Response} res The http response sended 
  */
 exports.getUserById = async (req, res) => {
+    const userId = req.params.id;
+    // handle error during reaching the user
+    try{
 
+        const user = await UsersModel.findById(userId).exec();
+
+        return res.status(200).json({
+            ok: true,
+            message: `User ${userId} have being finded`,
+            data: user
+        })
+
+    }catch(err){
+        return res.status(500).json({
+            ok: false,
+            message: `An error occured while trying to reach the user`,
+            error: err,
+            details: `INTERNAL_SERVER_ERROR`
+        })
+    }
 }
 
 /**
- * Update all the users
- * @param {Express.Request} req The http request
- * @param {Express.Response} res The http response 
+ * Send via a JSON Res all the users in the DB
+ * @param {Express.Request} req The http request received
+ * @param {Express.Response} res The http res sended
  */
-exports.updateAllUsers = async (req, res) => {
-
+exports.getAllUsers = async (req, res) => {
+    // Error from getting user handler
+    try{
+        const allUser = await UsersModel.find().exec();
+        return res.status(200).json({
+            ok: true,
+            message: `All users have being finded`,
+            data: allUser
+        })
+    }catch(err){
+        return res.status(500).json({
+            ok: false,
+            message: `An error occured while reaching all users`,
+            details: err,
+            type: `INTERNAL_SERVER_ERROR`
+        })
+    }
 }
 
 /**
@@ -93,7 +235,41 @@ exports.updateAllUsers = async (req, res) => {
  * @param {Express.Response} res The http response
  */
 exports.updateOneUserById = async (req, res) => {
+    const userId = req.params.id;
 
+    // Update error handler
+    try{
+
+        // Parsing request body available data
+        const data = {
+            name: req.body.name,
+            email: req.body.email,
+            message: req.body.message
+        }
+
+        // Find one user and update
+        await UsersModel.findByIdAndUpdate(userId, {
+            $set: data
+        })
+
+        // Get the new user
+        const user = await UsersModel.findById(userId);
+
+        // Return the res
+        return res.status(200).json({
+            ok: true,
+            message: `User ${userId}, have being modified`,
+            data: user
+        })
+
+    }catch(err){
+        return res.status(500).json({
+            ok: false,
+            message: `An error occured while trying to update a user`,
+            details: err,
+            type: `INTERNAL_SERVER_ERROR`
+        })
+    }
 }
 
 /**
@@ -102,7 +278,26 @@ exports.updateOneUserById = async (req, res) => {
  * @param {Express.Response} res The https response
  */
 exports.deleteAllUsers = async (req, res) => {
+    // Deletion error handler
+    try {
 
+        // Delete all users in the db
+        const amountDeleted = await UsersModel.deleteMany({});
+
+        // Return the res
+        return res.status(200).json({
+            ok: true,
+            message: `${amountDeleted.deletedCount} users have being deleted !`
+        })
+
+    } catch (err) {
+        return res.status(500).json({
+            ok: false,
+            message: `An error occured while deleting all the users`,
+            details: err,
+            type: `INTERNAL_SERVER_ERROR`
+        })
+    }
 }
 
 /**
@@ -111,5 +306,71 @@ exports.deleteAllUsers = async (req, res) => {
  * @param {Express.Response} res The http response
  */
 exports.deleteUserById = async (req, res) => {
+    const userId = req.params.id;
+    if(!userId) return res.status(500).json({
+        ok: false,
+        message: `No id provided`,
+        error: `Wrong or no id provided`,
+        type: `WRONG_API_USAGE`
+    })
+    // Deletion error handler
+    try {
+        // Find and delete the user
+        const deletionData = await UsersModel.deleteOne({_id: userId});
 
+
+        if(deletionData.deletedCount >= 1){
+            return res.status(200).json({
+                ok: true,
+                message: `User ${userId} have being deleted`
+            })
+        }
+
+        return res.status(400).json({
+            ok: false,
+            message: `No users finded with this id`,
+            error: `Wrong id`,
+            type: `WRONG_API_USAGE`
+        })
+    } catch (err) {
+        return res.status(500).json({
+            ok: false,
+            message: `An errore occured while deleting the user`,
+            details: err,
+            type: `INTERNAL_SERVER_ERROR`
+        })
+    }
+}
+
+
+// Utilities functions
+
+/**
+ * Return true is the user already exist and false if not
+ * @param {Object} data All the user data validate by UserValidator.validate()
+ * @returns {Boolean | Number} True if user exist false if not, -1 if error
+ */
+async function isExistingUser(data){
+    // Error handler
+    try{
+
+        // Validate user object in case of non conformity
+        const validationResult = UserValidator.validate(data);
+
+        if(validationResult.error){
+            return -1
+        }
+
+        // Check if user email exist
+        const user = await UsersModel.findOne(data).exec();
+
+        if(user){
+            return true
+        }
+
+        return false
+
+    }catch(err){
+        return -1
+    }
 }
