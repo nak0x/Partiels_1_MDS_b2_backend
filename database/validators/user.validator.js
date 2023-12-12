@@ -4,7 +4,8 @@ const UserValidationSchema = Joi.object({
     name: Joi.string()
         .max(512)
         .required(),
-    email: Joi.email()
+    email: Joi.string()
+        .email()
         .required(),
     message: Joi.string()
         .max(4096)
