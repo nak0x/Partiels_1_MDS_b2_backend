@@ -9,11 +9,10 @@ const UserValidator = require("../database/validators/user.validator");
 exports.createNewUser = async (req, res) =>{
     // Try Catch prevent any error during user creation
     try{
+
         // Deconstruct of the request body
         let data = {
-            name: req.body.name,
-            email: req.body.email,
-            message: req.body.message
+            ...req.body
         };
     
         // Data validation
@@ -64,14 +63,6 @@ exports.createNewUser = async (req, res) =>{
             type: "UNKNOWED_ERROR"
         })
     }
-
-    // Exeptions management
-    return res.status(500).json({
-        ok: false,
-        error: `An error occured during the processing of the request`,
-        details: null,
-        type: "INTERNAL_SERVER_ERROR"
-    })
 }
 
 /**
@@ -88,9 +79,7 @@ exports.createOrModifyUser = async (req, res) => {
 
         // Deconstruct of the request body
         let data = {
-            name: req.body.name,
-            email: req.body.email,
-            message: req.body.message
+            ...req.body
         };
     
         // Data validation
@@ -169,13 +158,6 @@ exports.createOrModifyUser = async (req, res) => {
         })
     }
 
-
-    return res.status(500).json({
-        ok: false,
-        error: `An error occured during the processing of the request`,
-        details: null,
-        type: "INTERNAL_SERVER_ERROR"
-    })
 }
 
 /**
@@ -241,13 +223,9 @@ exports.updateOneUserById = async (req, res) => {
     // Update error handler
     try{
 
-        // Check if all data are filled
-
-        // Parsing request body available data
+        // Deconstruc req.body
         const data = {
-            name: req.body.name,
-            email: req.body.email,
-            message: req.body.message
+            ...req.body
         }
 
         // validate data
