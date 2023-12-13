@@ -130,6 +130,7 @@ exports.createOrModifyUser = async (req, res) => {
                     message: `New user ${userId} have being updated !`
                 })
             }
+            // ajout gestoion cas id pas trouve
         }else{
 
             // Check if user already exist
@@ -240,11 +241,25 @@ exports.updateOneUserById = async (req, res) => {
     // Update error handler
     try{
 
+        // Check if all data are filled
+
         // Parsing request body available data
         const data = {
             name: req.body.name,
             email: req.body.email,
             message: req.body.message
+        }
+
+        // validate data
+        const validationResult = UserValidator.validate(data);
+
+        if(validationResult.error){
+            return res.status(400).json({
+                ok: false,
+                message: `An wrong data sended`,
+                details: validationResult.error,
+                type: `WRONG_TYPE_ERROR`
+            })
         }
 
         // Find one user and update
@@ -358,11 +373,13 @@ async function isExistingUser(data){
         const validationResult = UserValidator.validate(data);
 
         if(validationResult.error){
-            return -1
+            return false
         }
 
         // Check if user email exist
-        const user = await UsersModel.findOne(data).exec();
+        const user = await UsersModel.findOne({
+            email: validationResult.value.email
+        }).exec();
 
         if(user){
             return true
@@ -371,6 +388,6 @@ async function isExistingUser(data){
         return false
 
     }catch(err){
-        return -1
+        return false
     }
 }
