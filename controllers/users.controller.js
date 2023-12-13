@@ -9,11 +9,10 @@ const UserValidator = require("../database/validators/user.validator");
 exports.createNewUser = async (req, res) =>{
     // Try Catch prevent any error during user creation
     try{
+
         // Deconstruct of the request body
         let data = {
-            name: req.body.name,
-            email: req.body.email,
-            message: req.body.message
+            ...req.body
         };
     
         // Data validation
@@ -64,14 +63,6 @@ exports.createNewUser = async (req, res) =>{
             type: "UNKNOWED_ERROR"
         })
     }
-
-    // Exeptions management
-    return res.status(500).json({
-        ok: false,
-        error: `An error occured during the processing of the request`,
-        details: null,
-        type: "INTERNAL_SERVER_ERROR"
-    })
 }
 
 /**
@@ -88,9 +79,7 @@ exports.createOrModifyUser = async (req, res) => {
 
         // Deconstruct of the request body
         let data = {
-            name: req.body.name,
-            email: req.body.email,
-            message: req.body.message
+            ...req.body
         };
     
         // Data validation
@@ -130,6 +119,7 @@ exports.createOrModifyUser = async (req, res) => {
                     message: `New user ${userId} have being updated !`
                 })
             }
+            // ajout gestoion cas id pas trouve
         }else{
 
             // Check if user already exist
@@ -168,13 +158,6 @@ exports.createOrModifyUser = async (req, res) => {
         })
     }
 
-
-    return res.status(500).json({
-        ok: false,
-        error: `An error occured during the processing of the request`,
-        details: null,
-        type: "INTERNAL_SERVER_ERROR"
-    })
 }
 
 /**
@@ -240,11 +223,21 @@ exports.updateOneUserById = async (req, res) => {
     // Update error handler
     try{
 
-        // Parsing request body available data
+        // Deconstruc req.body
         const data = {
-            name: req.body.name,
-            email: req.body.email,
-            message: req.body.message
+            ...req.body
+        }
+
+        // validate data
+        const validationResult = UserValidator.validate(data);
+
+        if(validationResult.error){
+            return res.status(400).json({
+                ok: false,
+                message: `An wrong data sended`,
+                details: validationResult.error,
+                type: `WRONG_TYPE_ERROR`
+            })
         }
 
         // Find one user and update
@@ -358,11 +351,13 @@ async function isExistingUser(data){
         const validationResult = UserValidator.validate(data);
 
         if(validationResult.error){
-            return -1
+            return false
         }
 
         // Check if user email exist
-        const user = await UsersModel.findOne(data).exec();
+        const user = await UsersModel.findOne({
+            email: validationResult.value.email
+        }).exec();
 
         if(user){
             return true
@@ -371,6 +366,6 @@ async function isExistingUser(data){
         return false
 
     }catch(err){
-        return -1
+        return false
     }
 }
