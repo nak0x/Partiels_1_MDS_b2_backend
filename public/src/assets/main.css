@@ -1,0 +1,39 @@
+@import './base.css';
+
+html{
+    scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar{
+    background-color: var(--darkest-blue);
+}
+
+::-webkit-scrollbar-thumb{
+    background-color: var(--main-blue);
+    border-radius: 5rem;
+    border: .25rem solid var(--darkest-blue);
+}
+
+.btn{
+    margin: 0;
+    border: .15em solid var(--black);
+    /* border: 0;
+    box-shadow: 0 .2em 1em .3em #0002; */
+    padding: .5em 1.2em;
+    border-radius: .25em;
+    font-size: 1.3em;
+    text-transform: uppercase;
+    background-color: var(--light-blue);
+    color: var(--black);
+    font-family: 'Righteous', sans-serif;
+    cursor: pointer;
+    transition: 
+        box-shadow .3s ease-out,
+        border-color .3s ease-out;
+}
+
+.btn:hover{
+    box-shadow: 0 .2em 1.5em -.1em var(--main-blue);
+    border-color: var(--main-blue);
+
+}
