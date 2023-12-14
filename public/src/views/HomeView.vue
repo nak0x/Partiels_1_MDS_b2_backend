@@ -1,4 +1,21 @@
 <script>
+async function postData(url = "", data = {}) {
+  const response = await fetch(url, {
+    method: "POST",
+    mode: "cors",
+    cache: "no-cache",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+    
+    },
+    redirect: "follow",
+    referrerPolicy: "no-referrer",
+    body: JSON.stringify(data),
+  });
+  return response.json(); 
+}
+
 export default {
   data() {
     return {
@@ -66,7 +83,16 @@ export default {
           y: 50
         }
       ],
-      scroll: 0
+      scroll: 0,
+      formData: {
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        studiesLevel: ""
+      },
+      formState: "default",
+      formError: ""
     }
   },
   methods: {
@@ -123,21 +149,32 @@ export default {
     */
     handleScroll(e){
 
-      console.log(e);
-
-
       
     },
     updateParalax(arr){
       // Get all the paralax layer
       let paralaxLayers = document.querySelectorAll(".paralax-effect .layer");
-      console.log(paralaxLayers);
 
       // Apply the PosValue
       paralaxLayers.forEach((v, i) => {
-        console.log(v, i);
         v.style.cssText = `transform: translateX(${arr[i].x}px) translateY(${arr[i].y}px);`;
       })
+    },
+    async sendFormData(){
+      try{
+        this.formState = "load"
+        let res = await postData("http://localhost:8081/api/users/", {...this.formData})
+        if(res.ok){
+          this.formState = "validated";
+        }else{
+          this.formState = "error";
+          this.formError = res.error;
+        }
+      }catch(err){
+        this.formState = "error";
+        this.formError = err.message;
+        console.log(err);
+      }
     }
   },
   mounted(){
@@ -147,7 +184,7 @@ export default {
 </script>
 
 <template>
-  <main @scroll.prevent="handleScroll">
+  <main @scroll="handleScroll">
     <section id="hero-section">
       <div class="paralax-effect">
         <div class="layer sky" id="paralax-layer-6" data-speed-factor="1.1" data-dir="up">
@@ -196,28 +233,101 @@ export default {
         <h2>DÉCOUVRER NOS FORMATIONS</h2>
       </div>
       <div class="card-container">
-        <div class="card">
+        <a class="card" target="_blank" href="https://www.mydigitalschool.com/formation-ecole-multimedia-alternance">
           <div class="card-image-container">
             <img src="@/assets/images/details-section/card-1.png" alt="">
           </div>
           <div class="card-text-container">
-            <h3>BACHELOR<br>MARKETING</h3>
+            <h3>BACHELOR MARKETING</h3>
           </div>
-        </div>
-        <div class="card">
+        </a>
+        <a class="card" target="_blank" href="https://www.mydigitalschool.com/formation-webdesign">
           <div class="card-image-container">
             <img src="@/assets/images/details-section/card-2.png" alt="">
           </div>
           <div class="card-text-container">
-            <h3>BACHELOR<br>WEBDESIGN</h3>
+            <h3>BACHELOR WEBDESIGN</h3>
           </div>
-        </div>
-        <div class="card">
+        </a>
+        <a class="card" target="_blank" href="https://www.mydigitalschool.com/formation-developpeur">
           <div class="card-image-container">
             <img src="@/assets/images/details-section/card-3.png" alt="">
           </div>
           <div class="card-text-container">
-            <h3>BACHELOR<br>DÉVELOPPEMENT</h3>
+            <h3>BACHELOR DÉVELOPPEMENT</h3>
+          </div>
+        </a>
+      </div>
+      <div class="infos-container">
+        <div class="text-container">
+          <h3 class="title-container">Qu'est-ce qu'un stage d'immersion ?</h3>
+          <p>Nos stages d’immersion vous permettent de découvrir notre méthode d’apprentissage révolutionnaire via une expérience de 2 jours inoubliable.</p>
+          <p>Découvrez les métiers du digital à travers une expérience qui changera de vos habitudes. Si vous aimez les défis et le mode projet, ce stage est fait pour vous.</p>
+          <button class="btn">Je veut participer !</button>
+        </div>
+        <div class="date-container">
+          <p><span class="number">4 et 5</span><br>Janvier 2023</p>
+        </div>
+      </div>
+    </section>
+    <section id="contact-form">
+      <div class="left contact-form-container" :data-status="formState">
+        <h2 class="form-title">S'INSCRIRE</h2>
+        <div class="error-message">
+          <p class="error">{{ formError }}</p>
+        </div>
+        <div class="loading">
+          <span class="loader"></span>
+        </div>
+        <div class="success-message">
+          <h3>Félicitation !</h3>
+          <p>Vous êtes inscrit à notre stage d'immersion</p>
+          <a href="https://www.mydigitalschool.com/"><button class="btn">En savoir plus sur nous !</button></a>
+        </div>
+        <form @submit.prevent="sendFormData" class="contact-form" >
+          <div class="field required">
+            <label for="first-name">Prénom</label>
+            <input type="text" placeholder="Jean" required v-model="formData.firstName">
+          </div>
+          <div class="field required">
+            <label for="last-name">Nom</label>
+            <input type="text" placeholder="Dupond" required v-model="formData.lastName">
+          </div>
+          <div class="field required">
+            <label for="email">Prénom</label>
+            <input type="email" placeholder="j.dupd@exemple.com" required v-model="formData.email">
+          </div>
+          <div class="field">
+            <label for="phone">Téléphone</label>
+            <input type="tel" placeholder="0707070707" required v-model="formData.phone">
+          </div>
+          <div class="field select required">
+            <label for="stud-lvl">Niveau d'étude</label>
+            <select name="stud-lvl" required v-model="formData.studiesLevel">
+              <option value="">Choisir son niveau d'étude</option>
+              <option value="0">Bac</option>   
+              <option value="1">Bac +1</option>
+              <option value="2">Bac +2</option>
+              <option value="3">Bac +3</option>
+              <option value="4">Bac +4</option>
+              <option value="5">Bac +5</option> 
+            </select>
+          </div>
+          <div class="field">
+            <button class="btn" type="submit">S'inscrire !</button>
+          </div>
+        </form>
+      </div>
+      <div class="right image-container">
+        <img src="@/assets/images/contact-form/contact-form-image.png" alt="">
+        <div class="contact-infos-container">
+          <div class="info-wraper">
+            <img src="@/assets/svg/contact-section/location.svg" alt="">
+            <p>14 Av. du Rhône, 74000 Annecy</p>
+          </div>
+          <div class="info-wraper">
+            <img src="@/assets/svg/contact-section/call.svg" alt="">
+            <p>04 68 02 02 69</p>
           </div>
         </div>
       </div>
@@ -226,6 +336,167 @@ export default {
 </template>
 
 <style scoped>
+/* Contact section */
+
+.image-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.contact-infos-container{
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.info-wraper{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .2rem;
+  color: var(--white);
+  font-size: 1.1em;
+}
+
+#contact-form{
+  min-height: 100vh;
+  background-color: var(--darkest-blue);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: var(--vertical-padding) var(--side-padding);
+}
+
+.contact-form-container{
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.contact-form-container[data-status="default"] .error-message,
+.contact-form-container[data-status="default"] .loading,
+.contact-form-container[data-status="default"] .success-message{
+  display: none;
+}
+
+.contact-form-container[data-status="load"] .error-message,
+.contact-form-container[data-status="load"] .success-message,
+.contact-form-container[data-status="load"] .contact-form{
+  display: none;
+}
+
+.contact-form-container[data-status="validated"] .error-message,
+.contact-form-container[data-status="validated"] .loading,
+.contact-form-container[data-status="validated"] .contact-form{
+  display: none;
+}
+
+.contact-form-container[data-status="error"] .success-message,
+.contact-form-container[data-status="error"] .loading{
+  display: none;
+}
+
+.contact-form-container .loading{
+  display: flex;
+  place-items: center;
+}
+
+.contact-form-container .success-message {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+  font-size: 1.3em;
+  color: var(--white);
+}
+
+.contact-form-container .success-message h3{
+  font-size: 2em;
+  color: var(--white);
+  font-family: 'Righteous', sans-serif;
+}
+
+.contact-form-container .error-message{
+  font-size: 1.2em;
+  color: var(--orange);
+}
+
+.form-title{
+  color: var(--white);
+}
+.contact-form{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 628px;
+  min-width: 300px;
+  width: 100%;
+}
+.field{
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.field label{
+  font-size: 1.2em;
+  color: var(--white);
+}
+.field input{
+  padding: 1em;
+  border-radius: .5em;
+  font-size: 1.1em;
+  border: 2px solid var(--white);
+  background-color: transparent;
+  color: var(--white);
+}
+.field input::placeholder{
+  color: var(--white);
+  opacity: .3;
+}
+.field input:active,
+.field input:hover,
+.field input:focus,
+.field input:focus-visible,
+.field input:focus-within,
+.field select:active,
+.field select:hover,
+.field select:focus,
+.field select:focus-visible,
+.field select:focus-within
+{
+  outline: none;
+  background-color: #fff2;
+}
+
+.field select{
+  display: inline-block;
+  padding: 1em;
+  border-radius: .5em;
+  font-size: 1.1em;
+  border: 2px solid var(--white);
+  background-color: transparent;
+  color: var(--white);
+  appearance: none;
+  accent-color: var(--main-blue);
+}
+
+.field select option{
+  padding: 1em;
+  color: var(--black);
+  border-radius: .5em;
+  accent-color: var(--main-blue);
+}
+
+.field .btn{
+  max-width: 200px;
+  margin-top: 3rem;
+}
+
+/* Main */
+
 main{
   min-height: 100vh;
 }
@@ -274,8 +545,8 @@ main{
   color: var(--white);
 }
 #sub-hero p{
-  font-size: 1.5em;
-  letter-spacing: .05em;
+  font-size: 1.4em;
+  letter-spacing: .03em;
   line-height: 130%;
 }
 #sub-hero .right{
@@ -298,7 +569,7 @@ main{
 }
 /* Details section */
 #details{
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   gap: var(--vertical-padding);
@@ -310,9 +581,9 @@ main{
 #details .card-container{
   align-self: center;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  gap: 4rem;
+  gap: 2rem;
   height: 100%;
   max-width: 1800px;
   width: 100%;
@@ -320,9 +591,9 @@ main{
 
 .card{
   display: grid;
-  grid-template-rows: 4fr 1fr;
-  width: 450px;
-  height: 100%;
+  grid-template-rows: 6fr 1fr;
+  width: 350px;
+  height: 250px;
   cursor: pointer;
 }
 .card .card-image-container{
@@ -342,9 +613,38 @@ main{
   height: 100%;
   margin: 0;
   border-radius: 0 0 1.5rem 1.5rem;
-  font-size: 1em;
-  font-size: 1.5rem;
+  font-size: 1rem;
   padding: 1.5rem;
   color: var(--black);
+}
+
+#details .infos-container{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+}
+
+#details .infos-container .text-container{
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  font-size: 1.2em;
+}
+
+#details .infos-container .text-container .title-container{
+  font-size: 2em;
+}
+
+#details .infos-container .date-container{
+  font-size: 6em;
+  font-family: 'Righteous', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#details .infos-container .date-container .number{
+  font-size: 2.2em;
 }
 </style>
