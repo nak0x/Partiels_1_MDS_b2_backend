@@ -19,7 +19,7 @@ async function postData(url = "", data = {}) {
 export default {
   data() {
     return {
-      "paralaxLayersBasePos": [
+      "heroParalaxLayersBasePos": [
         // Sky
         {
           x: 0,
@@ -51,7 +51,71 @@ export default {
           y: 50
         }
       ],
-      "paralaxLayersPos": [
+      "heroParalaxLayersPos": [
+        // Sky
+        {
+          x: 0,
+          y: 0
+        },
+        // White montain
+        {
+          x: 0,
+          y: 100
+        },
+        // Title
+        {
+          x: 0,
+          y: -200
+        },
+        // dark montain
+        {
+          x: 0,
+          y: 100
+        },
+        // base line
+        {
+          x: 0,
+          y: 50,
+        },
+        // Lake
+        {
+          x: 0,
+          y: 50
+        }
+      ],
+      "humanParalaxLayersBasePos": [
+        // white outline
+        {
+          x: 0,
+          y: -10
+        },
+        // men
+        {
+          x: 0,
+          y: -10
+        },
+        // bot left
+        {
+          x: 0,
+          y: 0
+        },
+        // top left
+        {
+          x: 0,
+          y: 100
+        },
+        // top right
+        {
+          x: 0,
+          y: 0,
+        },
+        // bot right
+        {
+          x: 0,
+          y: 0
+        }
+      ],
+      "humanParalaxLayersPos": [
         // Sky
         {
           x: 0,
@@ -92,73 +156,42 @@ export default {
         studiesLevel: ""
       },
       formState: "default",
-      formError: ""
+      formError: "",
+      clientHeight:window.innerHeight|| document.documentElement.clientHeight|| document.body.clientHeight,
+      heroParalaxLayers: []
     }
   },
   methods: {
-    /* 
-      WheelEvent {isTrusted: true, _vts: 1702500105594, deltaX: -0, deltaY: -120, deltaZ: 0, …}
-        isTrusted:true
-        _vts:1702500105594
-        altKey:false
-        bubbles:true
-        button: 0
-        buttons: 0
-        cancelBubble: false
-        cancelable: true
-        clientX: 1114
-        clientY: 426
-        composed: true
-        ctrlKey: false
-        currentTarget: null
-        defaultPrevented: true
-        deltaMode: 0
-        deltaX: -0
-        deltaY: -120
-        deltaZ: 0
-        detail: 0
-        eventPhase: 0
-        fromElement: null
-        layerX: 1114
-        layerY: 574
-        metaKey: false
-        movementX: 0
-        movementY: 0
-        offsetX: 1114
-        offsetY: 524
-        pageX: 1114
-        pageY: 426
-        relatedTarget: null
-        returnValue: false
-        screenX: 1114
-        screenY: 547
-        shiftKey: false
-        sourceCapabilities: null
-        srcElement: img
-        target: img
-        timeStamp: 19480.89999999851
-        toElement: img
-        type: "wheel"
-        view: Window {window: Window, self: Window, document: document, name: '', location: Location, …}
-        wheelDelta: 120
-        wheelDeltaX: 0
-        wheelDeltaY: 120
-        which: 0
-        x: 1114
-        y: 426
-    */
     handleScroll(e){
+
+      let speedFact, dir
+      let scroll = window.scrollY;
+      let heroParalaxLayers = document.querySelectorAll("#hero-section .paralax-effect .layer");
+
+      heroParalaxLayers.forEach((v, i) =>{
+        speedFact = v.getAttribute("data-speed-factor");
+        dir = v.getAttribute("data-dir");
+        switch(dir){
+          case "down":
+            this.heroParalaxLayersPos[i].y = this.heroParalaxLayersBasePos[i].y + (scroll / 10) * speedFact;
+            break;
+          case "right":
+            this.heroParalaxLayersPos[i].x = this.heroParalaxLayersBasePos[i].x + (scroll / 20) * speedFact;
+            break;
+          default:
+            this.heroParalaxLayersPos[i].y = this.heroParalaxLayersBasePos[i].y - (scroll / 100) * speedFact;
+          break;
+        }
+        this.updateHeroParalax()
+      })
 
       
     },
-    updateParalax(arr){
-      // Get all the paralax layer
-      let paralaxLayers = document.querySelectorAll(".paralax-effect .layer");
-
-      // Apply the PosValue
-      paralaxLayers.forEach((v, i) => {
-        v.style.cssText = `transform: translateX(${arr[i].x}px) translateY(${arr[i].y}px);`;
-      })
+    updateHeroParalax(){
+      let heroParalaxLayers = document.querySelectorAll("#hero-section .paralax-effect .layer");
+      heroParalaxLayers.forEach((v, i) => {
+      v.style.cssText = `transform: translateX(${this.heroParalaxLayersPos[i].x}px) translateY(${this.heroParalaxLayersPos[i].y}px);`;
+    })
     },
     async sendFormData(){
       try{
@@ -178,35 +211,42 @@ export default {
     }
   },
   mounted(){
-    this.updateParalax(this.paralaxLayersBasePos);
+    let heroParalaxLayers = document.querySelectorAll("#hero-section .paralax-effect .layer");
+    let humanParalaxItem = document.querySelectorAll(".human-paralax-item");
+    // Apply the PosValue
+    heroParalaxLayers.forEach((v, i) => {
+      v.style.cssText = `transform: translateX(${this.heroParalaxLayersBasePos[i].x}px) translateY(${this.paralaxLayersBasePos[i].y}px);`;
+    })
+
+    window.addEventListener('scroll', this.handleScroll)
   }
 }
 </script>
 
 <template>
-  <main @scroll="handleScroll">
+  <main>
     <section id="hero-section">
       <div class="paralax-effect">
-        <div class="layer sky" id="paralax-layer-6" data-speed-factor="1.1" data-dir="up">
+        <div class="layer sky" id="paralax-layer-6" data-speed-factor="0" data-dir="up">
           <img src="@/assets/images/l4_ciel.png" alt="">
         </div>
-        <div class="layer white-montain" id="paralax-layer-5" data-speed-factor="1.3" data-dir="up">
+        <div class="layer white-montain" id="paralax-layer-5" data-speed-factor="5" data-dir="up">
           <img src="@/assets/images/l3_montagne.png" alt="">
         </div>
-        <div class="layer title" id="paralax-layer-4" data-speed-factor="1.5" data-dir="down">
+        <div class="layer title" id="paralax-layer-4" data-speed-factor="10" data-dir="down">
           <div class="title-container">
             <h1 class="page-title">Découvrir</h1>
           </div>
         </div>
-        <div class="layer dark-montain" id="paralax-layer-3" data-speed-factor="1.5" data-dir="up">
+        <div class="layer dark-montain" id="paralax-layer-3" data-speed-factor="15" data-dir="up">
           <img src="@/assets/images/l2_montagne.png" alt="">
         </div>
-        <div class="layer baseline" id="paralax-layer-2" data-speed-factor="1.5" data-dir="right">
+        <div class="layer baseline" id="paralax-layer-2" data-speed-factor="20" data-dir="right">
           <div class="baseline-container">
             <p class="baseline">Nos stages d'immersion MyDigitalSchool<br>Annecy</p>
           </div>
         </div>
-        <div class="layer lake" id="paralax-layer-1" data-speed-factor="2" data-dir="up">
+        <div class="layer lake" id="paralax-layer-1" data-speed-factor="23" data-dir="up">
           <img src="@/assets/images/l1_lac.png" alt="">
         </div>
       </div>
@@ -219,12 +259,12 @@ export default {
       </div>
       <div class="right">
         <div class="human-paralax">
-          <img src="@/assets/images/sub-hero-paralax/l6.png" style="transform: translateY(-10%);" alt="">
-          <img src="@/assets/images/sub-hero-paralax/l5.png" style="transform: translateY(-10%);" alt="">
-          <img src="@/assets/images/sub-hero-paralax/l4.svg" style="bottom: 6rem; left: 6rem;" alt="">
-          <img src="@/assets/images/sub-hero-paralax/l3.svg" style="top: 3rem; left: 3rem;" alt="">
-          <img src="@/assets/images/sub-hero-paralax/l2.svg" style="top: 6rem; right: 6rem;" alt="">
-          <img src="@/assets/images/sub-hero-paralax/l1.svg" style="bottom: 3rem; right: 3rem;" alt="">
+          <img src="@/assets/images/sub-hero-paralax/l6.png" class="human-paralax-item" speed="1" style="transform: translateY(-10%);" alt="">
+          <img src="@/assets/images/sub-hero-paralax/l5.png" class="human-paralax-item" speed="1" style="transform: translateY(-10%);" alt="">
+          <img src="@/assets/images/sub-hero-paralax/l4.svg" class="human-paralax-item" speed="2" style="bottom: 6rem; left: 6rem;" alt="">
+          <img src="@/assets/images/sub-hero-paralax/l3.svg" class="human-paralax-item" speed="2" style="top: 3rem; left: 3rem;" alt="">
+          <img src="@/assets/images/sub-hero-paralax/l2.svg" class="human-paralax-item" speed="2" style="top: 6rem; right: 6rem;" alt="">
+          <img src="@/assets/images/sub-hero-paralax/l1.svg" class="human-paralax-item" speed="2" style="bottom: 3rem; right: 3rem;" alt="">
         </div>
       </div>
     </section>
@@ -497,9 +537,6 @@ export default {
 
 /* Main */
 
-main{
-  min-height: 100vh;
-}
 /* Hero section */
 #hero-section{
   height: 100vh;
