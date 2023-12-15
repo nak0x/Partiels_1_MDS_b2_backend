@@ -20,7 +20,7 @@ exports.createNewUser = async (req, res) =>{
         if(validationResult.error){
             return res.status(400).json({
                 ok: false,
-                error: `Connot create a user.`,
+                error: `Cannot create a user, incorect infos.`,
                 details: validationResult.error,
                 type: "JOI_DATA_VALIDATION"
             });
@@ -40,12 +40,7 @@ exports.createNewUser = async (req, res) =>{
         }
     
         // Instantiation of UsersModel to create new user
-        const newUser = new UsersModel();
-
-        // User data fill
-        newUser.name = data.name;
-        newUser.email = data.email;
-        newUser.message = data.message;
+        const newUser = new UsersModel(data);
 
         // User saving 
         await newUser.save();
@@ -107,9 +102,7 @@ exports.createOrModifyUser = async (req, res) => {
                 // Full update of the user
                 await UsersModel.findByIdAndUpdate(userId, {
                     $set:{
-                        name: data.name,
-                        email: data.email,
-                        message: data.message
+                        ...data
                     }
                 })
 
@@ -133,12 +126,7 @@ exports.createOrModifyUser = async (req, res) => {
             }
             
             // Create a new user
-            const newUser = new UsersModel();
-
-            // User data fill
-            newUser.name = data.name;
-            newUser.email = data.email;
-            newUser.message = data.message;
+            const newUser = new UsersModel(data);
 
             // Send the new user to the db
             await newUser.save();

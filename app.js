@@ -15,7 +15,7 @@ const router = require("./router/index.routes");
 app.use("/api", router);
 
 // Public files
-app.use(express.static("public"))
+app.use(express.static("./public/dist"))
 
 app.listen(process.env.SERVER_PORT,async ()=>{
     if(await DatabaseSetup(process.env.DB_URI, true)){

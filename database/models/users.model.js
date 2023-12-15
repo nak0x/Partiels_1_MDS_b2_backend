@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
-    name : {
+    firstName : {
+        type: String,
+        max: [512, "Too long name for the new user"],
+        require: [true, "An name is required for creating a new user"]
+    },
+    lastName : {
         type: String,
         max: [512, "Too long name for the new user"],
         require: [true, "An name is required for creating a new user"]
@@ -19,10 +24,12 @@ const UserSchema = new Schema({
         require: [true, "An email is required for creating a new User"],
         unique: [true, "User must be unique"]
     },
-    message : {
-        type: String,
-        max: [4096, "Too long message for the new user"],
-        require: [true, "A contact message is required for creating a new user"]
+    phone : {
+        type: Number
+    },
+    studiesLevel: {
+        type: Number,
+        require: [true, `You need to provide a studies level to create a new User`]
     }
 },{
     timestamps: true
